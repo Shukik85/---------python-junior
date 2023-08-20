@@ -130,8 +130,6 @@ class PhoneBookCSV(object):
             self.__csvSet()
 
 
-# nameBook = prompt("Имя справочника\n{:-^30}\n".format("Ввод"))
-# print(nameBook)
 Book = PhoneBookCSV("Новая книга")
 Book.getBook()
 print("Ok")
