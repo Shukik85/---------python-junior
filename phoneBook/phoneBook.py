@@ -28,65 +28,95 @@ class PhoneBookCSV(object):
             "Мобильный",
         ]
         self.bookName = bookName
+        self.__csvReader()
+        print(self.fields)
         self.row = None
         self.rows = None
-        self.tiket = True  # флаг сброса справочника
+        self.tiket = True  # флаг пустого справочника
 
-    def __csvSet(self):
+    def __csvWriter(self):
         """
         Формирование csv файла
         """
         with open(
             repr(self.bookName) + ".csv",
-            "a" if self.tiket else "w",  # открываем на добавление в конец файла.
+            "a"
+            if self.tiket
+            else "w",  # открываем на добавление либо перезапись файла.
             encoding="utf8",
             newline="",
-            errors="surrogateescape"
+            errors="surrogateescape",
         ) as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=self.fields, dialect="excel")
+            writer = csv.DictWriter(
+                csvfile,
+                fieldnames=self.fields,
+                restval="",
+                extrasaction="raise",
+                dialect="excel",
+            )
             if not self.tiket:
                 writer.writeheader()  # если файла нет записываем заголовок.
+                self.tiket = True
             if self.row:
                 writer.writerow(self.row)  # для записи новой строки
                 self.row = None
             if self.rows:
                 writer.writerows(self.rows)  # для редактирования записи
                 self.rows = None
+        print("{:-^30}".format("Запись сделана!"))
 
-    def __getRows(self, search):
+    def __csvReader(self, search=None):
         """
         Поиск по значению\n
 
         Args:
             bookName (str): название зправочника.\n
-            search (str, optional): поиск строк по справочнику. Defaults to "all".
+            search (str): поиск строк по справочнику.
         """
-        print(self.bookName)
-        print(search, type(search))
+        print("{:-^30}".format(self.bookName))
         if os.path.isfile(repr(self.bookName) + ".csv"):
             with open(
                 repr(self.bookName) + ".csv",
                 "r",
                 encoding="utf8",
                 newline="",
-                errors="surrogateescape"
+                errors="surrogateescape",
             ) as csvfile:
-                reader = csv.reader(csvfile, dialect="excel")
+                reader = csv.DictReader(csvfile, restval="None", dialect="excel")
+                fieldName = reader.fieldnames
+                Header = print(
+                    ("{:-^30}" * len(fieldName)).format(*fieldName)
+                )  # выводим заголовок таблицы.
+                Header
+                numLine = 0
+                if search == None:
+                    self.fields = fieldName
                 if search == "all":
-                    self.count = 0
+                    for d in reader:
+                        value = list(d.values())
+                        print(numLine, ("{:-^30}" * len(d)).format(*value))
+                        if numLine % 10 == 0 and numLine != 0:
+                            prompt("{:-^30}".format("Далее => нажмите Enter"))
+                            Header
+                        numLine += 1
+                elif search:
                     for value in reader:
-                        print(self.count, ("{:-^30}" * len(value)).format(*value))
-                        self.count += 1
-                else:
-                    print(("{:-^30}" * len(self.fields)).format(*self.fields))
-                    for value in reader:
-                        if value.count(search) > 0:
-                            print(("{:-^30}" * len(value)).format(*value))
+                        if value.count(search):
+                            print(numLine, ("{:-^30}" * len(value)).format(value))
+                            numLine += 1
         else:
             print("Файл не найден!")
+            while True:
+                answer = prompt("Создать новый? (да/нет)")
+                if answer == "да":
+                    self.__csvWriter()
+                    break
+                elif answer == "нет":
+                    break
+
 
     def getBook(self):
-        self.__getRows("all")
+        self.__csvReader("all")
 
     def resetBook(self):
         """
@@ -101,9 +131,10 @@ class PhoneBookCSV(object):
             else:
                 break
         self.tiket = False
-        self.setNewRow()
+        self.__setNewRow()
+        self.__csvWriter()
 
-    def setNewRow(self):
+    def __setNewRow(self):
         """
         Заполняем поля справочника
         """
@@ -111,25 +142,28 @@ class PhoneBookCSV(object):
         for field in self.fields:
             value = prompt("Заполните поле:\n{!r:-^30}\n{:^15}".format(field, "=>"))
             self.row[field] = value
-        self.__csvSet()
+        return self.row
 
-    def setNewValue(self):
+    def resetValue(self):
         """
         Редактировать справочник\n
         """
         self.getBook()
         row = int(prompt("Выберите строку для редактирования : ")) - 1
         if row >= 0 and row <= self.count:
-            with open(repr(self.bookName) + ".csv", "r", encoding="utf8", errors="surrogateescape") as csvfile:
+            with open(
+                repr(self.bookName) + ".csv",
+                "r",
+                encoding="utf8",
+                errors="surrogateescape",
+            ) as csvfile:
                 read = csv.DictReader(csvfile, dialect="excel")
                 self.rows = list(read)
-                tmpRow = self.rows.pop(row)
-
-            self.rows.insert(row - 1, tmpRow)
+                self.rows[row] = self.__setNewRow()
             self.tiket = False
-            self.__csvSet()
+            self.__csvWriter()
 
 
-Book = PhoneBookCSV("Новая книга")
+Book = PhoneBookCSV("Новая книга2")
 Book.getBook()
 print("Ok")
