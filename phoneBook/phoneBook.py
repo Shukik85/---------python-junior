@@ -1,4 +1,3 @@
-import array
 import csv
 import os
 from prompt_toolkit import prompt
@@ -11,10 +10,10 @@ class PhoneBookCSV(object):
         bookName (str): имя_справочника
 
     Methods:
-        setNewRow(): добавление записи\n
-        setNewValue(): обновить значение строки\n
         getBook(): просмотр справочника\n
-        getRows(): поиск по значению\n
+        setValue(self): создать новую запись\n
+        getSearchRow(): поиск по значению\n
+        resetValue(): обновить значение строки\n
         resetBook(): замена полей с очисткой справочника
     """
 
@@ -28,11 +27,10 @@ class PhoneBookCSV(object):
             "Мобильный",
         ]
         self.bookName = bookName
-        self.__csvReader()
-        print(self.fields)
         self.row = None
         self.rows = None
         self.tiket = True  # флаг пустого справочника
+        self.__csvReader(None)
 
     def __csvWriter(self):
         """
@@ -65,7 +63,7 @@ class PhoneBookCSV(object):
                 self.rows = None
         print("{:-^30}".format("Запись сделана!"))
 
-    def __csvReader(self, search=None):
+    def __csvReader(self, search: str|None):
         """
         Поиск по значению\n
 
@@ -91,6 +89,7 @@ class PhoneBookCSV(object):
                 numLine = 0
                 if search == None:
                     self.fields = fieldName
+                    self.count = len(list(reader))
                 if search == "all":
                     for d in reader:
                         value = list(d.values())
@@ -100,22 +99,36 @@ class PhoneBookCSV(object):
                             Header
                         numLine += 1
                 elif search:
-                    for value in reader:
-                        if value.count(search):
-                            print(numLine, ("{:-^30}" * len(value)).format(value))
+                    for d in reader:                        
+                        value = list(d.values())
+                        if search in value:
+                            print(numLine, ("{:-^30}" * len(d)).format(*value))
                             numLine += 1
         else:
             print("Файл не найден!")
             while True:
-                answer = prompt("Создать новый? (да/нет)")
+                answer = prompt("Создать новый? (да/нет): ")
                 if answer == "да":
                     self.__csvWriter()
                     break
                 elif answer == "нет":
                     break
 
+    def __newRow(self):
+        """
+        Заполняем поля справочника
+        """
+        row = dict()
+        for field in self.fields:
+            value = prompt("Заполните поле:\n{!r:-^30}\n{:^15}".format(field, "=>"))
+            row[field] = value
+        return row
+
 
     def getBook(self):
+        """
+        Просмотреть справочник
+        """
         self.__csvReader("all")
 
     def resetBook(self):
@@ -131,25 +144,28 @@ class PhoneBookCSV(object):
             else:
                 break
         self.tiket = False
-        self.__setNewRow()
+        self.row = self.__newRow()
         self.__csvWriter()
 
-    def __setNewRow(self):
+    def setValue(self):
         """
-        Заполняем поля справочника
+        Создать новую запись.
         """
-        self.row = dict()
-        for field in self.fields:
-            value = prompt("Заполните поле:\n{!r:-^30}\n{:^15}".format(field, "=>"))
-            self.row[field] = value
-        return self.row
+        self.row = self.__newRow()
+        self.__csvWriter()
+
 
     def resetValue(self):
         """
-        Редактировать справочник\n
+        Редактировать строку\n
         """
         self.getBook()
-        row = int(prompt("Выберите строку для редактирования : ")) - 1
+        while True:
+            row = prompt("Выберите строку для редактирования : ")
+            if row.isdigit():
+                row = int(row)
+                break
+        print(self.count)
         if row >= 0 and row <= self.count:
             with open(
                 repr(self.bookName) + ".csv",
@@ -159,11 +175,10 @@ class PhoneBookCSV(object):
             ) as csvfile:
                 read = csv.DictReader(csvfile, dialect="excel")
                 self.rows = list(read)
-                self.rows[row] = self.__setNewRow()
+                self.rows[row] = self.__newRow()
             self.tiket = False
             self.__csvWriter()
 
+    def getSearchRow(self, search: str):
+        self.__csvReader(search)
 
-Book = PhoneBookCSV("Новая книга2")
-Book.getBook()
-print("Ok")
