@@ -3,9 +3,8 @@ from PhoneBook.phoneBook import PhoneBookCSV
 Book = PhoneBookCSV(input("Введите имя справочника: "))
 
 MENU = {
-    "справочник": lambda: print(Book.bookName),
-    "новая-запись": lambda: Book.setValue(),
     "просмотр": lambda: Book.getBook(),
+    "новая-запись": lambda: Book.setValue(),
     "поиск": lambda: Book.getSearchRow(input("Введите ключевое слово поиска!: ")),
     "изменить": lambda: Book.resetValue(),
     "удалить-справочник": lambda: Book.resetBook(),
@@ -14,16 +13,13 @@ MENU = {
 
 
 class Menu(object):
-    tiket = True
-
-    def __init__(self):
-        self.keys = MENU.keys()
+    tiket = True # флаг выхода
 
     def getMenu(self, insert: str):
         self.answer = insert
         if self.answer == "выход":
-            self.tiket = False
-        if self.answer in list(self.keys):
+            self.tiket = False #
+        if self.answer in list(MENU.keys()):
             self.menu = MENU[self.answer]
             self.menu()
             self.answer = print('{:"^30}'.format("Выполнено!"))
