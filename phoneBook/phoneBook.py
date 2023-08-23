@@ -63,7 +63,7 @@ class PhoneBookCSV(object):
                 self.rows = None
         print("{:-^30}".format("Запись сделана!"))
 
-    def __csvReader(self, search: str|None):
+    def __csvReader(self, search: str | None):
         """
         Поиск по значению\n
 
@@ -99,7 +99,7 @@ class PhoneBookCSV(object):
                             Header
                         numLine += 1
                 elif search:
-                    for d in reader:                        
+                    for d in reader:
                         value = list(d.values())
                         if search in value:
                             print(numLine, ("{:-^30}" * len(d)).format(*value))
@@ -123,7 +123,6 @@ class PhoneBookCSV(object):
             value = prompt("Заполните поле:\n{!r:-^30}\n{:^15}".format(field, "=>"))
             row[field] = value
         return row
-
 
     def getBook(self):
         """
@@ -154,7 +153,6 @@ class PhoneBookCSV(object):
         self.row = self.__newRow()
         self.__csvWriter()
 
-
     def resetValue(self):
         """
         Редактировать строку\n
@@ -181,4 +179,3 @@ class PhoneBookCSV(object):
 
     def getSearchRow(self, search: str):
         self.__csvReader(search)
-
